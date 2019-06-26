@@ -1,0 +1,264 @@
+import time
+
+# global list used in most functions - may change
+full_board = [4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 4, 4, 4, 0]
+
+def print_rules() :
+    """function prints the rules for this mancala game
+    """
+    print("Mancala Rules :")
+    print("Player 1 and player 2 will alternate turns")
+    print("If a player ends their turn in their goal they will be allowed to take another turn")
+    print("Players may only choose spaces from their own side of the board")
+    print("The game board will be represented as seen below and players will enter the numbers shown on THIS game board to select spaces on their turn")
+    print("Game Board:")
+    print("P1 side:", 6, 5, 4, 3, 2, 1, 0)
+    print("P2 side:", " ",  7, 8, 9, 10, 11, 12, 13)
+
+
+
+
+def print_board():
+    """function to print board will be used after each turn"""
+    # used ___need url__ as reference before creating game board
+    # should print full_board to look like
+    # player 1 :   0 4 4 4 4 4 4
+    # player 2 :     4 4 4 4 4 4 0
+    # index values:
+    # player 1 :   6  5  4  3  2  1  0
+    # player 2 :      7  8  9  10 11 12 -1
+    
+    # player 1's side printed in reverse order 0-6
+    print()
+    print("Game Board:")
+    print("P1 side:", full_board[6], full_board[5], full_board[4], full_board[3], full_board[2], full_board[1], full_board[0])
+    print("P2 side:", " ", full_board[7], full_board[8], full_board[9], full_board[10], full_board[11], full_board[12], full_board[13])
+    
+def choose_space():
+    if full_board[12] == 1 :
+        choice = 12
+
+    elif full_board[11] == 2 :
+        choice = 11
+
+    elif full_board[10] == 3 or (full_board[11] == 1 and full_board[10] == 1):
+        choice = 10
+
+    elif full_board[9] == 4 or (full_board[11] == 1 and full_board[9] == 2) or (full_board[10] == 2 and full_board[9] == 1):
+        choice = 9
+
+    elif full_board[8] == 5 or (full_board[11] == 1 and full_board[8] == 3) or (full_board[10] == 2 and full_board[8] == 2) or (full_board[9] == 3 and full_board[8] == 1):
+        choice = 8
+
+    elif full_board[7] == 6 or (full_board[11] == 1 and full_board[7] == 4) or (full_board[10] == 2 and full_board[7] == 3) or (full_board[9] == 3 and full_board[7] == 2) or (full_board[8] == 4 and full_board[7] == 1):
+        choice = 7
+
+    else :
+        max_space = 7
+        for ind, space in enumerate(full_board):
+            if (space >= full_board[max_space]) and (ind > 6) and (ind < 13):
+                max_space = ind
+                   
+        choice = max_space
+
+    return choice
+    
+   
+
+    # while True:
+    #     i = 11
+    #     ii = i + full_board[i]
+    #     while ii > 13 :
+    #         ii -= 13  
+        
+    
+    
+    
+
+def check_user_choice(choice, player) :
+    """Function to check if users choice is allowed according to the rules"""
+    # checks condition of input being a number and if so changes value to an int - if not will inform the user and return false so the user will be prompted again
+    if player == 0 :
+        return True
+    if choice.isdigit():
+        choice = int(choice)
+    else :
+        print("not a valid choice")
+        return False
+
+    # checks condition of input number being a valid space to play if
+    if (choice == 6) or (choice == 13) or ((player == 1) and ((choice > 6) or (choice > 13))) or ((player == 2) and ((choice < 7) or (choice > 13))) :
+        print("not a valid choice")
+        return False
+    else :
+        return True
+
+
+def player_take_turn(player) :
+    """Function allows a user to take a turn"""
+    print("It's player {}".format(player) + "'s turn")
+    if player == 1 or player == 2:
+        choice = input("choose a space >")
+    elif player == 0 :
+        choice = choose_space()
+        print("they choose space {}".format(choice))
+    
+    while True :
+        if check_user_choice(choice, player):
+            break
+        else :
+            print("It's player {}".format(player) + "'s turn")
+            choice = input("choose a space >")
+    choice = int(choice)
+    held_pieces = full_board[choice]
+    full_board[choice] -= held_pieces
+    
+    position = choice
+
+    turn_status = [position, held_pieces, player]
+
+    while turn_status[1] > 0 :
+        turn_status = check_position(turn_status)
+        turn_status = move_one(turn_status)
+        
+        if (turn_status[1] == 0 and full_board[turn_status[0]] > 1) and turn_status[0] != 6 and turn_status[0] != 13 :
+            print_board()
+            
+            print("Player {}'s turn will continue from space {}".format(turn_status[2],turn_status[0]))
+            time.sleep(2)
+            
+            turn_status[1] += full_board[turn_status[0]]
+            full_board[turn_status[0]] -= turn_status[1]
+    
+    return turn_status
+
+    
+# test  
+# player_take_turn(1)
+
+
+
+def move_one(turn_status) :
+    """Function moves one space at a time - will be called in a loop until the user has used all pieces"""
+    turn_status[0] += 1
+    turn_status[1] -= 1
+    full_board[turn_status[0]] += 1
+    return turn_status
+
+def check_position(turn_status):
+    """Function will check the position throughout a turn and adjust the position so that pieces are not placed in the wrong goal and the position does not exceed the range of the board"""
+    if (turn_status[0] == 12 and turn_status[2] == 1) :
+        turn_status[0] = -1
+    elif (turn_status[0] == 5 and turn_status[2] == 2) :
+        turn_status[0] += 1
+    elif (turn_status[0] == 13) :
+        turn_status[0] = -1
+    return turn_status    
+    
+
+def check_board() :
+    """"Function used to check the board to decide if a player can take their turn i.e. their side of the board is not empty and to check when the valid spaces are all empty and the game is over"""
+    side1 = "not empty"
+    side2 = "not empty"
+    board = "not empty"
+
+    board_status = [side1, side2, board]
+    i = 0
+    # check side 1
+    while True :
+        if full_board[i] == 0 and i < 6:
+            side1 = "empty" 
+        elif full_board[i] != 0 and i < 6 :
+            side1 ="not empty"
+            break
+        else:
+            break
+        
+        i +=1
+    i = 7
+    # check side 2
+    while True :
+        if full_board[i] == 0 and i < 13 :
+            side2 = "empty" 
+        elif full_board[i] != 0 and i < 13 :
+            side2 ="not empty"
+            break
+        else:
+            break
+        
+        i +=1
+    # check board
+    if side1 == "empty" and side2 == "empty" :
+        board = "empty"
+
+    board_status = [side1, side2, board]
+    return board_status
+
+
+# Check check_board
+# board_status = check_board()
+
+# for space in board_status:
+#     print(space)
+
+def declare_winner() :
+    """Function called at the end of the game to declare the winner"""
+    if full_board[6] > full_board[13]:
+        print("Player 1 is the winner!")
+    elif full_board[6] < full_board[13]:
+        print("Player 2 is the winner")
+    else:
+        print("It's a tie!")
+
+def play() :
+    """Function callled to play the game"""
+    print_rules() 
+    while True:
+        num_players = input("Would you like a 1 player or 2 player game?  ")
+        if num_players.isdigit:
+            num_players = int(num_players)
+            if num_players == 1 or num_players == 2:
+                break
+        print("not a valid option please choose 1 or 2")
+    print_board()
+    board_status = check_board()
+
+    while board_status[2] != "empty" :
+        while True:
+            if board_status[0] == "empty" :
+                print("Player 1 cannot take a turn as there are no pieces on their side")
+                break
+            turn_status = player_take_turn(1)
+            print_board()
+            board_status = check_board()
+            if turn_status[0] != 6 :
+                break
+            print("Congrats you landed in your goal!")
+        if num_players == 2:
+            while True:
+                if board_status[1] == "empty" :
+                    print("Player 2 cannot take a turn as there are no pieces on their side")
+                    break
+                turn_status = player_take_turn(2)
+                print_board()
+                board_status = check_board()
+                if turn_status[0] != 13 :
+                    break
+                print("Congrats you landed in your goal!")
+        elif num_players == 1:
+            while True:    
+                if board_status[1] == "empty" :
+                    print("Player 0 cannot take a turn as there are no pieces on their side")
+                    break
+                turn_status = player_take_turn(0)
+                print_board()
+                board_status = check_board()
+                if turn_status[0] != 13 :
+                    break
+                print("Player 0 landed in their goal!")
+    
+    declare_winner()
+
+
+play()
+    # while 
